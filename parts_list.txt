@@ -7,4 +7,7 @@ arduino sensor shield v4: https://www.laskakit.cz/arduino-senzor-shield-v4-0/
 arduino lcd keypad shield: https://www.laskakit.cz/arduino-1602-lcd-klavesnice-shield/
 stepper motor driver: 
                     we use a4988: https://www.laskakit.cz/a4988-driver-pro-krokove-motory/
-https://www.laskakit.cz/pwm-mosfet-modul-f5305-55vdc-31a/
+stepper motor dirver adapter: https://www.laskakit.cz/a4988-drv8825-adapter/
+mosfet module: https://www.laskakit.cz/pwm-mosfet-modul-f5305-55vdc-31a/
+12v psu: https://www.laskakit.cz/lyonzg-s-120-12-modulovy-napajeci-230v-ac-dc-zdroj-12v-10a-120w/
+mosfet for fan: https://www.laskakit.cz/mosfet-tlacitko--irf520--24vdc-5a/
