@@ -1,0 +1,4 @@
+build/*
+pet_filament_control.ino.eightanaloginputs.hex
+pet_filament_control.ino.with_bootloader.eightanaloginputs.hex
+
