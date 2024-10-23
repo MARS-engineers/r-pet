@@ -1,0 +1,10 @@
+parts list
+
+
+
+arduino uno (original/clone):  https://www.laskakit.cz/arduino-uno-r3--atmega328p--klon/
+arduino sensor shield v4: https://www.laskakit.cz/arduino-senzor-shield-v4-0/
+arduino lcd keypad shield: https://www.laskakit.cz/arduino-1602-lcd-klavesnice-shield/
+stepper motor driver: 
+                    we use a4988: https://www.laskakit.cz/a4988-driver-pro-krokove-motory/
+https://www.laskakit.cz/pwm-mosfet-modul-f5305-55vdc-31a/
