@@ -27,12 +27,7 @@ void temp() {
     digitalWrite(FAN_pin, LOW);
   }
 }
-void setTemp(int16_t temp) {
-  SET_TEMP = (double)temp;
-  LCD_value_SET_TEMP((int)SET_TEMP);
-  Serial.print("Set temp: ");
-  Serial.println(SET_TEMP, 1);
-}
+
 void DebugTemp() {
   Serial.print("Řídící_veličina_(t):");
   Serial.print(SET_TEMP, 1);

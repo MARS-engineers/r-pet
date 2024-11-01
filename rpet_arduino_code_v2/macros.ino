@@ -1,6 +1,9 @@
+#define DEBUG_LEVEL_NONE 0
+#define DEBUG_LEVEl_ERROR 1
+#define DEBUG_LEVEL_WARNING 2
+#define DEBUG_LEVEL_INFO 3
 
 void setPWMPrescalerM(uint8_t pin, uint16_t prescale) {
-  byte mode;
 #if (pin == 5 || pin == 6 || pin == 9 || pin == 10)
 #if prescale == 1 mode = 0b001;
 #endif

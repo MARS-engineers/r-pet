@@ -26,95 +26,26 @@
 
 
 //Make temperature character for LCD
-#define temp_char 0
-const byte tempChar[8] = {
-  0b00100,
-  0b01010,
-  0b01010,
-  0b01010,
-  0b01010,
-  0b10001,
-  0b10001,
-  0b01110
-};
-
-#define error_char 1
-const byte errorChar[8] = {
-  0b11111,
-  0b11111,
-  0b10001,
-  0b10111,
-  0b10011,
-  0b10111,
-  0b10001,
-  0b11111
-};
-
-#define clean_char 2
-const byte cleanChar[8] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
-#define info_char 3
-const byte infoChar[8] = {
-  0b00000,
-  0b00100,
-  0b00000,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00100,
-  0b00000
-};
+#define temp_char 3
+uint8_t tempChar[8] = { 0x04, 0x0A, 0x0A, 0x0A, 0x0A, 0x11, 0x11, 0x0E };
 #define deg_char 4
-const byte degChar[8] = {
-  0b01100,
-  0b10010,
-  0b10010,
-  0b01100,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000
-};
+uint8_t degChar[8] = { 0x0C, 0x12, 0x12, 0x0C, 0x00, 0x00, 0x00, 0x00 };
 #define motion_char 5
-const byte motionChar[8] = {
-  0b00000,
-  0b00100,
-  0b10010,
-  0b01001,
-  0b10010,
-  0b00100,
-  0b00000,
-  0b00000
-};
+uint8_t motionChar[8] = { 0x00, 0x04, 0x12, 0x09, 0x12, 0x04, 0x00, 0x00 };
 
+const uint8_t cursorIcon = 0x7E;
+const uint8_t editCursorIcon = 0x7F;
+uint8_t *upArrow = new uint8_t[8]{ 0x04, 0x0E, 0x1F, 0x04, 0x04, 0x04, 0x04, 0x04 };
+uint8_t *downArrow = new uint8_t[8]{ 0x04, 0x04, 0x04, 0x04, 0x04, 0x1F, 0x0E, 0x04 };
 
 void setup_lcd() {
   //Initialization of LCD
-#ifndef lcd_i2c
-  lcd.begin(lcd_chars, lcd_rows);
-#else
-  lcd.init();  // initialize the i2c lcd
-  lcd.init();
-  lcd.backlight();
-#endif
+  lcd.begin(LCD_COLS, LCD_ROWS);
+
   lcd.createChar(temp_char, tempChar);
-  lcd.createChar(error_char, errorChar);
-  lcd.createChar(clean_char, cleanChar);
-  lcd.createChar(info_char, infoChar);
   lcd.createChar(deg_char, degChar);
   lcd.createChar(motion_char, motionChar);
-  lcd.clear();  //
-
-  //Render first home page
-  renderPage(HOME, 0);
+  lcd.clear();
 }
 void renderPage(uint8_t page, uint8_t scroll) {
   lcd.setCursor(0, 0);
@@ -125,13 +56,11 @@ void renderPage(uint8_t page, uint8_t scroll) {
       lcd.setCursor(0, 0);
       lcd.write(byte(temp_char));
       lcd.setCursor(2, 0);
-      LCD_value_TEMP("na");
+      LCD_value_TEMP(0);
       lcd.setCursor(5, 0);
       lcd.print("/");
       lcd.setCursor(6, 0);
       LCD_value_SET_TEMP(TempPresets[TempPresetdefault]);
-      lcd.setCursor(9, 0);
-      lcd.write(byte(deg_char));
       lcd.setCursor(11, 0);
       LCD_value_INFO(stripeRunout);
       lcd.setCursor(0, 1);
@@ -142,12 +71,12 @@ void renderPage(uint8_t page, uint8_t scroll) {
       LCD_value_DIR(stepperDirection);
       break;
     case CONFIG:  //display config menu, now fixed only to two rows
-      lcd.setCursor(0, 0);
-      lcd.print(menu[scroll]);
-      lcd.setCursor(0, 1);
-      lcd.print(menu[scroll + 1]);
-      lcd.blink();
-      lcd.setCursor(0, 0);
+      lcd.setCursor(1, 0);
+      lcd.print(Omenu[scroll]);
+      lcd.setCursor(1, 1);
+      lcd.print(Omenu[scroll + 1]);
+      lcd.setCursor(0, cursorY);
+      lcd.write(cursorIcon);
 
       /*for (uint8_t i = 0; i < 2; i++) {
         lcd.print(menu[i]);
@@ -174,6 +103,8 @@ void renderPage(uint8_t page, uint8_t scroll) {
       lcd.print(stepperEnable);
       LCD_VALUE_PRESET(SpeedPresets[SpeedPresetdefault]);
 
+      break;
+    case INFO:
       break;
     case STOP:
       lcd.noBlink();
@@ -204,9 +135,17 @@ void LCD_value_TEMP(uint16_t a) {
 }
 void LCD_value_SET_TEMP(uint16_t a) {
   lcd.setCursor(6, 0);
-  lcd.print("   ");
+  lcd.print("    ");
   lcd.setCursor(6, 0);
   lcd.print(a);
+  if (a < 10) {
+    lcd.setCursor(7, 0);
+  } else if (a < 99) {
+    lcd.setCursor(8, 0);
+  } else if (a < 999) {
+    lcd.setCursor(9, 0);
+  }
+  lcd.write(byte(deg_char));
 }
 void LCD_value_INFO(uint16_t a) {
   lcd.setCursor(11, 0);
