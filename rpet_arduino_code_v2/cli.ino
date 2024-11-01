@@ -3,7 +3,6 @@ SimpleCLI cli;
 Command cmdPing;
 Command cmdSet;     // set {temp/speed} [value]
 Command cmdPrint;   // print {temp/speed/all}
-Command cmdMem;     // mem {load/store}
 Command cmdPreset;  // preset [n] [value]
 Command cmdDebug;   // debug [set/show/reset] [temp/speed] {on/off}
 
@@ -21,10 +20,6 @@ void settupCli() {
   cmdPrint = cli.addCmd("print", printCallback);
   cmdPrint.addPositionalArgument("a", "all");
   cmdPrint.setDescription("usage: print {temp/speed/all}");
-
-  cmdMem = cli.addCmd("mem", memCallback);
-  cmdMem.addPositionalArgument("a", "print");
-  cmdMem.setDescription("usage: mem load/store/print");
 
   cmdPreset = cli.addCmd("preset", presetCallback);
   cmdPreset.addPositionalArgument("a");
@@ -79,32 +74,14 @@ void printCallback(cmd* c) {
     print("Unknow value, valid is temp/speed/all\n");
   }
 }
-void memCallback(cmd* c) {
-  Command cmd(c);  // Create wrapper object
-  Argument _selectArg = cmd.getArgument("a");
-  String selectArg = _selectArg.getValue();
 
-  if (selectArg == "load") {
-
-  } else if (selectArg == "store") {
-  } else if (selectArg == "print") {
-    println("Preset defaults:");
-    println("Temp: " + eepromObject.TempPresetdefault);
-    println("Speed: " + eepromObject.TempPresetdefault);
-
-  } else if (selectArg == "dump") {
-    dump();
-  } else {
-    print("Unknow value, valid is load/store/print/dump\n");
-  }
-}
 void presetCallback(cmd* c) {
-  Command cmd(c);  // Create wrapper object
-  Argument _valueArg = cmd.getArgument("value");
-  Argument _selectArg = cmd.getArgument("a");
+  //Command cmd(c);  // Create wrapper object
+  //Argument _valueArg = cmd.getArgument("value");
+  //Argument _selectArg = cmd.getArgument("a");
 
-  String selectArg = _selectArg.getValue();
-  int16_t value = _valueArg.getValue().toInt();
+  //String selectArg = _selectArg.getValue();
+  //int16_t value = _valueArg.getValue().toInt();
 }
 void debugCallback(cmd* c) {  //usage: debug [set/show/reset] [temp/speed] {true/false}
   Command cmd(c);             // Create wrapper object

@@ -1,22 +1,13 @@
 //include all needed libraries
-#include "./config.h"
+#include <Wire.h>
+#include <LiquidCrystal.h>
 #include <Arduino.h>
-#include <EEPROM.h>
+#include <thermistor.h>  //Download it here: https://electronoobs.com/eng_arduino_thermistor.php
 #include <AccelStepper.h>
 #include <PID_v1.h>
-#include <thermistor.h>  //Download it here: https://electronoobs.com/eng_arduino_thermistor.php
 #include <SimpleCLI.h>
-#include <LiquidCrystal.h>
-#include <Wire.h>
+#include "./config.h"
 #include "vars.h"
-
-//WIP
-/*
-#ifdef ENABLE_PAT9125
-#include "./lib/pat9125/pat9125.h"
-PAT9125 PAT(FilamentSensor_adr);
-#endif
-*/
 
 LiquidCrystal lcd(LCD_rs_pin, LCD_en_pin, LCD_d4_pin, LCD_d5_pin, LCD_d6_pin, LCD_d7_pin);
 
@@ -41,6 +32,17 @@ void setStepperSpeed(int16_t speed = SpeedPresets[SpeedPreset]);
 
 //Initial setup
 void setup() {
+  Serial.begin(SERIAL_BAUD);
+  Serial.println(F("RPET pulltruder (MARS) ver: 2.0  File: " __FILE__ " from " __DATE__ "\r\n"));
+
+  setup_lcd();
+
+  setPWMPrescalerM(PWM_pin, 1024);
+  TempPreset = TempPresetdefault;
+
+  setTemp();
+  setup_temp();
+
   //Pins settup
   pinMode(BTN_pin, INPUT);
   pinMode(PWM_pin, OUTPUT);
@@ -56,22 +58,33 @@ void setup() {
   digitalWrite(STP_E_pin, HIGH);
   digitalWrite(STP_S_pin, LOW);
 
-  initAll();
+  //Initialization of stepper motor
+  stepperEnable = false;
+  SpeedPreset = SpeedPresetdefault;
+  setStepperSpeed();
+  stepper.setMaxSpeed(stepperMaxSpeed);
+  stepper.setSpeed(float(SET_SPEED));
+  digitalWrite(STP_E_pin, !stepperEnable);
+  settupCli();
+  //Initialization of stepper motor
+  stepperEnable = false;
+  SpeedPreset = SpeedPresetdefault;
+  setStepperSpeed();
+  stepper.setMaxSpeed(stepperMaxSpeed);
+  stepper.setSpeed(float(SET_SPEED));
+  digitalWrite(STP_E_pin, !stepperEnable);
+  settupCli();
+
+  renderPage(HOME, 0);
 }
 void loop() {  //infinite loop
 
-  temp();  //calculate pid and set PWM
-
   cliTick();  //check for incomming serial input
-
-  endstop();  //check if any endstop is active
-
   buttonTick();
 
   stepper.runSpeed();
 
   if (stepperEnable) {  //run motor at constant speed if stepperEnable == true
-    //stepper.di
     digitalWrite(STP_E_pin, LOW);
   } else digitalWrite(STP_E_pin, HIGH);  //stop motor, disable motor
 
@@ -79,7 +92,8 @@ void loop() {  //infinite loop
   currentMillis = millis();
   if (page == HOME && (currentMillis - lcdUpdateMillis >= 200)) {
     lcdUpdateMillis = currentMillis;
-
+    temp();     //calculate pid and set PWM
+    endstop();  //check if any endstop is active
     if (lastTemp != PID_Input) {
       LCD_value_TEMP(int(PID_Input));
       lastTemp = PID_Input;
@@ -87,7 +101,7 @@ void loop() {  //infinite loop
   }
 
   currentMillis = millis();
-  if (currentMillis - remoteMillis >= 2000) {
+  if (currentMillis - remoteMillis >= 5000) {
     if (_debugTemp) {
 #ifdef DEBUGTEMP
       DebugTemp();
@@ -97,112 +111,6 @@ void loop() {  //infinite loop
   }
 }
 
-void buttonTick() {
-  //script to handle button presses and menus
-  if (anyButton()) {
-    currentMillis = millis();
-    if ((currentMillis - buttonsMillis >= 300)) {
-      buttonsMillis = currentMillis;
-      switch (page) {
-        case HOME:  //home
-
-          if (button(UP) || button(DOWN)) {
-            if (button(UP)) {
-              if (TempPreset < TempPresetLength) TempPreset++;
-            } else if (TempPreset > 0) TempPreset--;
-
-            setTemp();
-
-          } else if (button(LEFT) || button(RIGHT)) {
-            if (button(LEFT)) {
-              if (SpeedPreset > 0) SpeedPreset--;
-            } else if (SpeedPreset < SpeedPresetLength) SpeedPreset++;
-
-            setStepperSpeed();
-
-          } else if (button(SELECT)) {
-            page = CONFIG;
-            renderPage(CONFIG, 0);  //display menu
-          }
-
-          break;
-        case CONFIG:
-          if (button(SELECT)) {
-            switch (cursorY + menuScroll1) {
-              case 0:  //exit
-                page = HOME;
-                renderPage(page, menuScroll1);
-                break;
-              case 1:  //temps preset
-                page = TEMP_PRESETS;
-                renderPage(page, 0);
-                break;
-              case 2:  //enable motor
-                page = SPEED_PRESETS;
-                renderPage(page, 0);
-                break;
-              case 3:  //about
-                page = INFO;
-                break;
-            }
-          } else if (button(DOWN)) {
-            if (cursorY <= 0) cursorY++;
-            else if (menuScroll1 <= (menuLength / lcd_rows)) {
-              cursorY = 0;
-              menuScroll1 = menuScroll1 + lcd_rows;
-            } else cursorY = 1;
-
-            renderPage(CONFIG, menuScroll1);
-            lcd.setCursor(0, cursorY);
-          } else if (button(UP)) {
-            if (cursorY >= 1) cursorY--;
-            else {
-              if (cursorY != 0) cursorY = 1;
-              if (menuScroll1 >= 1) menuScroll1 = menuScroll1 - lcd_rows;
-              else menuScroll1 = 0;
-            }
-
-            renderPage(CONFIG, menuScroll1);
-            lcd.setCursor(0, cursorY);
-          }
-          break;
-        case TEMP_PRESETS:
-          if (button(UP) || button(DOWN)) {
-            if (button(UP) && menuScroll2 < TempPresetLength) menuScroll2++;
-            else if (button(DOWN) && menuScroll2 > 0) menuScroll2--;
-            LCD_VALUE_PRESET(menuScroll2);
-            lcd.setCursor(0, 1);
-            lcd.print("Set temp: ");
-            lcd.setCursor(11, 1);
-            lcd.print(TempPresets[menuScroll2]);
-          } else if (button(SELECT)) {
-            page = CONFIG;
-            renderPage(CONFIG, menuScroll1);
-          }
-          break;
-
-        case SPEED_PRESETS:  //motor config page
-          if (button(UP) || button(DOWN)) {
-            if (button(UP) && menuScroll2 < SpeedPresetLength) menuScroll2++;
-            else if (button(DOWN) && menuScroll2 > 0) menuScroll2--;
-            LCD_VALUE_PRESET(menuScroll2);
-            lcd.setCursor(0, 1);
-            lcd.print("Set speed: ");
-            lcd.setCursor(12, 1);
-            lcd.print(SpeedPresets[menuScroll2]);
-          } else if (button(SELECT)) {
-            page = CONFIG;
-            renderPage(CONFIG, menuScroll1);
-          }
-          break;
-        default:
-          Serial.print("W: Unknow page: ");
-          Serial.println(page);
-          break;
-      }
-    }
-  }
-}
 //emergenci STOP script, called by interput
 void STOP_script() {              //stops everything
   stepperEnable = false;          //prevents mtotor for turning on
@@ -228,5 +136,11 @@ void setStepperSpeed(int16_t speed) {
   LCD_value_SPEED(abs(SET_SPEED));
   Serial.print("Set speed: ");
   Serial.println(SET_SPEED);
-  stepper.setSpeed(float(SET_SPEED));
+  stepper.setSpeed(SET_SPEED);
+}
+void setTemp(int16_t temp) {
+  SET_TEMP = (double)temp;
+  LCD_value_SET_TEMP((int)SET_TEMP);
+  Serial.print("Set temp: ");
+  Serial.println(SET_TEMP, 1);
 }

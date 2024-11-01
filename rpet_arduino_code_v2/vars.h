@@ -1,3 +1,4 @@
+
 //Macros for numbering pages. For easier reading
 #define HOME 0
 #define CONFIG 1
@@ -6,6 +7,16 @@
 #define INFO 4
 #define ERROR 200
 #define STOP 255
+
+
+const String Omenu[] = {
+  "Exit",
+  "temp presets",
+  "speed presets",
+  "Info"
+};
+const uint8_t menuLength = (sizeof(Omenu) / sizeof(Omenu[0])) - 1;
+
 
 struct _eepromObject {
   uint8_t TempPresetdefault;
@@ -26,7 +37,11 @@ uint16_t TempPresets[] = {
   205,
   210,
   215,
-  220
+  220,
+  250,
+  260,
+  270,
+  300
 };
 const uint8_t TempPresetLength = (sizeof(TempPresets) / sizeof(TempPresets[0])) - 1;
 double SET_TEMP = (double)TempPresets[TempPresetdefault];
@@ -41,6 +56,9 @@ int16_t SpeedPresets[] = {
   -100,
   -50,
   0,
+  2000,
+  2500,
+  4000,
   40,
   50,
   100,
@@ -48,11 +66,3 @@ int16_t SpeedPresets[] = {
 };
 const uint8_t SpeedPresetLength = (sizeof(SpeedPresets) / sizeof(SpeedPresets[0])) - 1;
 int16_t SET_SPEED = SpeedPresets[SpeedPresetdefault];
-
-const String menu[] = {
-  "Exit",
-  "temp presets",
-  "speed presets",
-  "Info"
-};
-const uint8_t menuLength = (sizeof(menu) / sizeof(menu[0])) - 1;

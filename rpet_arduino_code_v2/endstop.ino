@@ -3,7 +3,7 @@
 #define Endstop_input
 #define Endstop_output
 bool endstop_trap = false;
-uint8_t endstop() {
+void endstop() {
 
   if (digitalRead(EndStop_pin)) {
     if (!endstop_trap) {
@@ -11,8 +11,9 @@ uint8_t endstop() {
       Serial.println("W: Input string runout!");
 
       LCD_value_INFO(1);
-
+      
       TempPreset = TempPresetdefault;
+
       setTemp();
 
       SpeedPreset = SpeedPresetdefault;
@@ -26,7 +27,6 @@ uint8_t endstop() {
     LCD_value_INFO(0);
     endstop_trap = false;
   }
-  return 0;
 }
 
 void reset_endstop() {
